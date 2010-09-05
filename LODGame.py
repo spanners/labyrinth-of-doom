@@ -83,7 +83,7 @@ class LODGame(object):
         if self.ap > 0:
             s = self.lodmap.map[self.y][self.x]
             if s == self.lodmap.EMPTY:
-                print >> sys.stderr, "Nothing to pickup"
+                sys.stderr.write("Nothing to pickup")
             elif s == self.lodmap.HEALTH:
                 self.ap = 0
                 self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
@@ -97,7 +97,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.lantern = 1
                 else:
-                    print >> sys.stderr, "Already have a lantern"
+                    sys.stderr.write("Already have a lantern")
             elif s == self.lodmap.SWORD:
                 if self.sword == 0:
                     self.ap -= 1
@@ -105,7 +105,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.sword = 1
                 else:
-                    print >> sys.stderr, "Already have a sword"
+                    sys.stderr.write("Already have a sword")
             elif s == self.lodmap.ARMOUR:
                 if self.armour == 0:
                     self.ap -= 1
@@ -113,7 +113,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.armour = 1
                 else:
-                    print >> sys.stderr, "Already have a armour"
+                    sys.stderr.write("Already have a armour")
             else:
                 if self.lodmap.map[self.y][self.x] > 0:
                     self.ap -= 1
@@ -123,7 +123,7 @@ class LODGame(object):
                     self.treasure += treasure_picked_up
                     print "TREASURE PICKED UP!"
         else:
-            print >> sys.stderr, "No action points left"
+            sys.stderr.write("No action points left")
         if self.ap <= 0:
             self.start()
 
@@ -149,14 +149,14 @@ class LODGame(object):
                     print "SUCCESS"
                     self.check_win()
                 else:
-                    print >> sys.stderr, "Can not move into a wall"
+                    sys.stderr.write("Can not move into a wall")
             else:
-                print >> sys.stderr, "Can not move into a wall"
+                sys.stderr.write("Can not move into a wall")
         else:
-            print >> sys.stderr, "No action points left"
+            sys.stderr.write("No action points left")
 
     def cli_attack(self, direction):
-        print >> sys.stderr, "CAN'T ATTACK YET"
+        sys.stderr.write("CAN'T ATTACK YET")
 
     def cli_end_turn(self):
         self.ap = 0
