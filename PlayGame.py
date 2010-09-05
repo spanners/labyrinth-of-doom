@@ -6,8 +6,11 @@ class PlayGame(object):
 
     def play(self):
         while 1:
-            self.game.cli_look()
-            self.player_command(raw_input())
+            try:
+                self.game.cli_look()
+                self.player_command(raw_input())
+            except (KeyboardInterrupt,EOFError):
+                break
 
     def player_command(self, command):
         tmp = command.split(" ", 2)
@@ -19,8 +22,6 @@ class PlayGame(object):
         if com == "HELLO":
             if len(tmp) == 2:
                 self.game.cli_hello(arg)
-        elif com == "LOOK":
-            self.game.cli_look()
         elif com == "PICKUP":
             self.game.cli_pickup()
         elif com == "MOVE":

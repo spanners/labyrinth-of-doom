@@ -1,27 +1,15 @@
 import random
+import sys
 from LODMap import LODMap
 class LODGame(object):
-
     def __init__(self):
-        self.name = "Dave"
-        self.y = 2
-        self.x = 2
-        self.lantern = 0
-        self.sword = 0
-        self.armour = 0
-        self.treasure = 0
-        self.hp = 3
-        self.dead = False
-        self.ap = 0
-
-        self.rand = 0
+        self.reset()
         self.lodmap = LODMap()
         self.new_game()
 
     def new_game(self):
         print "STARTING NEW GAME"
         self.start()
-        rand = random.random()
         self.rand_start_pos()
         print "Starting At:", self.x, ",", self.y
         print "Goal:", self.lodmap.goal
@@ -95,7 +83,7 @@ class LODGame(object):
         if self.ap > 0:
             s = self.lodmap.map[self.y][self.x]
             if s == self.lodmap.EMPTY:
-                print "Nothing to pick up"
+                print >> sys.stderr, "Nothing to pickup"
             elif s == self.lodmap.HEALTH:
                 self.ap = 0
                 self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
@@ -109,7 +97,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.lantern = 1
                 else:
-                    print "Already have a lantern"
+                    print >> sys.stderr, "Already have a lantern"
             elif s == self.lodmap.SWORD:
                 if self.sword == 0:
                     self.ap -= 1
@@ -117,7 +105,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.sword = 1
                 else:
-                    print "Already have a sword"
+                    print >> sys.stderr, "Already have a sword"
             elif s == self.lodmap.ARMOUR:
                 if self.armour == 0:
                     self.ap -= 1
@@ -125,7 +113,7 @@ class LODGame(object):
                     print "SUCCESS"
                     self.armour = 1
                 else:
-                    print "Already have armour"
+                    print >> sys.stderr, "Already have a armour"
             else:
                 if self.lodmap.map[self.y][self.x] > 0:
                     self.ap -= 1
@@ -135,7 +123,7 @@ class LODGame(object):
                     self.treasure += treasure_picked_up
                     print "TREASURE PICKED UP!"
         else:
-            "No action points left"
+            print >> sys.stderr, "No action points left"
         if self.ap <= 0:
             self.start()
 
@@ -161,14 +149,14 @@ class LODGame(object):
                     print "SUCCESS"
                     self.check_win()
                 else:
-                    print "Can not move into a wall"
+                    print >> sys.stderr, "Can not move into a wall"
             else:
-                print "Can not move into a wall"
+                print >> sys.stderr, "Can not move into a wall"
         else:
-            print "No action points left"
+            print >> sys.stderr, "No action points left"
 
     def cli_attack(self, direction):
-        print "CAN'T ATTACK YET"
+        print >> sys.stderr, "CAN'T ATTACK YET"
 
     def cli_end_turn(self):
         self.ap = 0
