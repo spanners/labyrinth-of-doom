@@ -30,7 +30,8 @@ class LODGame(object):
         self.ap = 0
 
     def check_win(self):
-        if self.treasure >= self.lodmap.goal and self.lodmap.map[self.y][self.x] is self.lodmap.EXIT:
+        lodmap = self.lodmap
+        if self.treasure >= lodmap.goal and lodmap.map[self.y][self.x] is lodmap.EXIT:
             print "!!!YOU HAVE WON!!!"
             self.reset()
             self.new_game()
@@ -60,6 +61,7 @@ class LODGame(object):
         print "HELLO", self.name
 
     def cli_look(self):
+        lodmap = self.lodmap
         distance = 2 + self.lantern
         for i in range(-distance, distance+1):
             line = ""
@@ -69,10 +71,10 @@ class LODGame(object):
                 target_x = self.x + j
                 if abs(i) + abs(j) > distance + 1:
                     content = "X"
-                elif target_y < 0 or target_y >= self.lodmap.height or target_x < 0 or target_x >= self.lodmap.width:
+                elif target_y < 0 or target_y >= lodmap.height or target_x < 0 or target_x >= lodmap.width:
                     content = "#"
                 else:
-                    content = self.lodmap.int_to_char.get(self.lodmap.map[target_y][target_x],'G')
+                    content = lodmap.int_to_char.get(lodmap.map[target_y][target_x],"G")
                 line += content
             print line
 
@@ -80,45 +82,46 @@ class LODGame(object):
         print message
 
     def cli_pickup(self):
+        lodmap = self.lodmap
         if self.ap > 0:
-            s = self.lodmap.map[self.y][self.x]
-            if s == self.lodmap.EMPTY:
+            s = lodmap.map[self.y][self.x]
+            if s == lodmap.EMPTY:
                 sys.stderr.write("Nothing to pickup\n")
-            elif s == self.lodmap.HEALTH:
+            elif s == lodmap.HEALTH:
                 self.ap = 0
-                self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
+                lodmap.map[self.y][self.x] = lodmap.EMPTY
                 print "SUCCESS"
                 self.hp += 1
                 print "1+ HEALTH"
-            elif s == self.lodmap.LANTERN:
+            elif s == lodmap.LANTERN:
                 if self.lantern == 0:
                     self.ap -= 1
-                    self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
+                    lodmap.map[self.y][self.x] = lodmap.EMPTY
                     print "SUCCESS"
                     self.lantern = 1
                 else:
                     sys.stderr.write("Already have a lantern\n")
-            elif s == self.lodmap.SWORD:
+            elif s == lodmap.SWORD:
                 if self.sword == 0:
                     self.ap -= 1
-                    self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
+                    lodmap.map[self.y][self.x] = lodmap.EMPTY
                     print "SUCCESS"
                     self.sword = 1
                 else:
                     sys.stderr.write("Already have a sword\n")
-            elif s == self.lodmap.ARMOUR:
+            elif s == lodmap.ARMOUR:
                 if self.armour == 0:
                     self.ap -= 1
-                    self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
+                    lodmap.map[self.y][self.x] = lodmap.EMPTY
                     print "SUCCESS"
                     self.armour = 1
                 else:
                     sys.stderr.write("Already have a armour\n")
             else:
-                if self.lodmap.map[self.y][self.x] > 0:
+                if lodmap.map[self.y][self.x] > 0:
                     self.ap -= 1
-                    treasure_picked_up = self.lodmap.map[self.y][self.x]
-                    self.lodmap.map[self.y][self.x] = self.lodmap.EMPTY
+                    treasure_picked_up = lodmap.map[self.y][self.x]
+                    lodmap.map[self.y][self.x] = lodmap.EMPTY
                     print "SUCCESS"
                     self.treasure += treasure_picked_up
                     print "TREASURE PICKED UP!"
@@ -128,6 +131,7 @@ class LODGame(object):
             self.start()
 
     def cli_move(self, direction):
+        lodmap = self.lodmap
         if self.ap > 0:
             target_y = self.y
             target_x = self.x
@@ -141,8 +145,8 @@ class LODGame(object):
             else:
                 target_x -= 1
 
-            if target_y >= 0 and target_y < self.lodmap.height and target_x >= 0 and target_x < self.lodmap.width:
-                if self.lodmap.map[target_y][target_x] != self.lodmap.WALL:
+            if target_y >= 0 and target_y < lodmap.height and target_x >= 0 and target_x < lodmap.width:
+                if lodmap.map[target_y][target_x] != lodmap.WALL:
                     self.ap -= 1
                     self.y = target_y
                     self.x = target_x
