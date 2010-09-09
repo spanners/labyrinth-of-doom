@@ -2,9 +2,9 @@ import random
 import sys
 from LODMap import LODMap
 class LODGame(object):
-    def __init__(self):
+    def __init__(self, map_filename):
         self.reset()
-        self.lodmap = LODMap()
+        self.lodmap = LODMap(map_filename)
         self.new_game()
 
     def new_game(self):

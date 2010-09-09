@@ -1,5 +1,5 @@
 class LODMap(object):
-    def __init__(self):
+    def __init__(self, map_filename):
         self.TREASURE = 1
         self.EMPTY = 0
         self.HEALTH = -1
@@ -27,3 +27,28 @@ class LODMap(object):
                 self.EXIT:"E",
                 self.WALL:"#"
                 }
+        self.char_to_int = dict((v,k) for k, v in self.int_to_char.iteritems())
+        self.char_to_int["G"] = 1
+        self.parse(map_filename)
+
+    def parse(self, map_filename):
+        map_file = open(map_filename)
+        map_string = ''.join(map_file.readlines())
+        tmp = map_string.split("\n",2)
+        self.name = tmp[0].split(" ", 2)[1]
+        self.goal = tmp[1].split(" ", 2)[1]
+        self.height = len(tmp[2].split("\n")[0])
+        self.width = tmp[2].index("\n")
+        self.map = self.parse_map(tmp[2], self.height, self.width)
+
+    def parse_map(self, map_string, height, width):
+        map = list()
+        map.append(list())
+        i = 0
+        for c in map_string:
+            if c == '\n':
+                map.append(list())
+                i += 1
+            else:
+                map[i].append(self.char_to_int[c])
+        return map

@@ -1,7 +1,8 @@
 from LODGame import LODGame
+import sys
 class PlayGame(object):
-    def __init__(self):
-        self.game = LODGame()
+    def __init__(self, map_filename):
+        self.game = LODGame(map_filename)
         self.play()
 
     def play(self):
@@ -49,4 +50,4 @@ class PlayGame(object):
             print "Invalid command"
 
 if __name__ == "__main__":
-    PlayGame()
+    PlayGame(sys.argv[1])
