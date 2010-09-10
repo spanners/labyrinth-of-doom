@@ -8,6 +8,8 @@ class LODMap(object):
         self.ARMOUR = -4
         self.EXIT = -5
         self.WALL = -6
+        self.OUTSIDE = -7
+        self.UNKNOWN = -8
         self.height = 5
         self.width = 5
         self.goal = 2
@@ -25,7 +27,10 @@ class LODMap(object):
                 self.SWORD:"S",
                 self.ARMOUR:"A",
                 self.EXIT:"E",
-                self.WALL:"#"
+                self.WALL:"#",
+                self.OUTSIDE:"X",
+                self.UNKNOWN:"?",
+                self.TREASURE:"G"
                 }
         self.char_to_int = dict((v,k) for k, v in self.int_to_char.iteritems())
         self.char_to_int["G"] = 1

@@ -2,6 +2,7 @@ from LODGame import LODGame
 from LODMap import LODMap
 import time
 class AIBot(object):
+
     def __init__(self, game, delay=1):
         self.game = game
         self.facing = "N"
@@ -17,13 +18,17 @@ class AIBot(object):
                 self.turn_right()
             self.walk()
 
-    def pickup(self):
-        self.game.cli_pickup()
-
     def look(self):
         g = self.game
         m = self.game.lodmap
         self.fov = m.parse_map(g.cli_look(),3,3)
+
+    def pickup(self):
+        self.game.cli_pickup()
+
+    def move(self, direction):
+        self.facing = direction
+        self.walk()
 
     def walk(self):
         facing = self.facing
@@ -36,6 +41,17 @@ class AIBot(object):
         elif facing == "W":
             self.x -= 1
         self.game.cli_move(facing)
+
+    def turn_left(self):
+        facing = self.facing
+        if facing == "N":
+            self.facing = "W"
+        elif facing == "S":
+            self.facing = "E"
+        elif facing == "E":
+            self.facing = "N"
+        elif facing == "W":
+            self.facing = "S"
 
     def turn_right(self):
         facing = self.facing
@@ -62,5 +78,23 @@ class AIBot(object):
             x -= 1
         return (y,x)
 
-    def tile_at(self, pos):
+    def is_tile_at_pos(self, pos):
         return self.fov[pos[0]][pos[1]]
+
+    def is_in_fov(self, tile):
+        for row in self.fov:
+            for col in row:
+                if col == tile:
+                    return True
+        return False
+
+    def nearest_tile(self, tile):
+        j = 0
+        i = 0
+        for row in self.fov:
+            j += 1
+            for col in row:
+                i += 1
+                if col == tile:
+                    return (j,i)
+        return (-1, -1) # error
