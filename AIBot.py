@@ -9,7 +9,7 @@ class AIBot(object):
         self.y = 2
         self.x = 2
         self.pos = (self.y, self.x)
-        self.distance = 2
+        self.distance = 2 + game.lantern
         while True:
             time.sleep(delay)
             self.look()
@@ -107,10 +107,10 @@ class AIBot(object):
 
     def nearest_tile_in_fov(self, tile):
         tiles = self.tile_positions_in_fov(tile)
-        differences = [(abs(self.distance - tile[0]), abs(self.distance - tile[1])) for tile in tiles]
+        diffs = [(abs(self.distance - tile[0]), abs(self.distance - tile[1])) for tile in tiles]
         i = 0
-        minimum = differences[0]
-        for diff in differences[1:]:
+        minimum = diffs[0]
+        for diff in diffs[1:]:
             if sum(diff) < sum(minimum):
                 minimum = diff
                 i += 1
