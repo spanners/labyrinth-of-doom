@@ -9,12 +9,16 @@ class AIBot(object):
         self.y = 2
         self.x = 2
         self.pos = (self.y, self.x)
+        self.distance = 2
         while True:
             time.sleep(delay)
             self.look()
-            if self.tile_at(self.pos) == game.lodmap.TREASURE:
+            if self.is_tile_at_pos_in_fov(self.pos) == game.lodmap.TREASURE:
                 self.pickup()
-            while self.tile_at(self.next_pos()) == game.lodmap.WALL:
+            elif self.is_tile_in_fov(game.lodmap.TREASURE):
+                print "nearest gold", self.nearest_tile_in_fov(game.lodmap.TREASURE)
+                time.sleep(2)
+            while self.is_tile_at_pos_in_fov(self.next_pos()) == game.lodmap.WALL:
                 self.turn_right()
             self.walk()
 
@@ -25,6 +29,7 @@ class AIBot(object):
 
     def pickup(self):
         self.game.cli_pickup()
+        self.distance = 2 + self.game.lantern
 
     def move(self, direction):
         self.facing = direction
@@ -66,8 +71,7 @@ class AIBot(object):
 
     def next_pos(self):
         facing = self.facing
-        y = 2
-        x = 2
+        y = x = self.distance
         if facing == "N":
             y -= 1
         elif facing == "S":
@@ -78,23 +82,36 @@ class AIBot(object):
             x -= 1
         return (y,x)
 
-    def is_tile_at_pos(self, pos):
+    def is_tile_at_pos_in_fov(self, pos):
         return self.fov[pos[0]][pos[1]]
 
-    def is_in_fov(self, tile):
+    def is_tile_in_fov(self, tile):
         for row in self.fov:
             for col in row:
                 if col == tile:
                     return True
         return False
 
-    def nearest_tile(self, tile):
+    def tile_positions_in_fov(self, tile):
+        tiles = list()
         j = 0
         i = 0
         for row in self.fov:
-            j += 1
             for col in row:
-                i += 1
                 if col == tile:
-                    return (j,i)
-        return (-1, -1) # error
+                    tiles.append((j,i))
+                i += 1
+            i = 0
+            j += 1
+        return tiles
+
+    def nearest_tile_in_fov(self, tile):
+        tiles = self.tile_positions_in_fov(tile)
+        differences = [(abs(self.distance - tile[0]), abs(self.distance - tile[1])) for tile in tiles]
+        i = 0
+        minimum = differences[0]
+        for diff in differences[1:]:
+            if sum(diff) < sum(minimum):
+                minimum = diff
+                i += 1
+        return tiles[i]
