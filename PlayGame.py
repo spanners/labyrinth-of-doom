@@ -1,8 +1,10 @@
 from LODGame import LODGame
+from AIBot import AIBot
 import sys
 class PlayGame(object):
     def __init__(self, map_filename):
         self.game = LODGame(map_filename)
+        ai_bot = AIBot(self.game, 0.5)
         self.play()
 
     def play(self):

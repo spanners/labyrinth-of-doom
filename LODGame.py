@@ -63,6 +63,7 @@ class LODGame(object):
     def cli_look(self):
         lodmap = self.lodmap
         distance = 2 + self.lantern
+        map = ""
         for i in range(-distance, distance+1):
             line = ""
             for j in range(-distance, distance+1):
@@ -76,7 +77,9 @@ class LODGame(object):
                 else:
                     content = lodmap.int_to_char.get(lodmap.map[target_y][target_x],"G")
                 line += content
-            print line
+            map += line + "\n"
+        print map[:-1]
+        return map[:-1]
 
     def cli_shout(self, message):
         print message
