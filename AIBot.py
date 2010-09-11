@@ -145,9 +145,10 @@ class AIBot(object):
                 if count is not INVALID:
                     return task
 
-        def delete_task(task):
+        def delete_task(task, pri_queue=pq):
             entry = task_finder[task]
-            entry[1] = INVALID
+            entry[1] = INVALID # marks entry for deletion by setting count to INVALID
+            pri_queue[:] = [t for t in pri_queue if t[1] != INVALID] # really deletes the task from pri_queue
 
         def reprioritize(priority, task):
             entry = task_finder[task]
@@ -172,6 +173,7 @@ class AIBot(object):
             except IndexError:
                 continue
 
+        #step 2.1: If the cell is impassable, remove it from the list
         print "pq", pq
         for task in pq:
             c = task[2]
@@ -179,5 +181,9 @@ class AIBot(object):
                 print c, "is impassable", l.int_to_char[self.fov[c[0]][c[1]]]
                 delete_task(c)
 
+        #step 2.2 If there is an element in the main list with the same coordinate and an equal or higher priority (lower number), remove it from the list
         print "pq", pq
-                
+        for task in pq:
+            print "task", task
+            c = task[2]
+            print "c", c
