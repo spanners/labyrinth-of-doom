@@ -1,6 +1,9 @@
+import time
+from heapq import heappush, heappop
+import itertools
 from LODGame import LODGame
 from LODMap import LODMap
-import time
+
 class AIBot(object):
 
     def __init__(self, game, delay=1):
@@ -16,7 +19,10 @@ class AIBot(object):
             if self.is_tile_at_pos_in_fov(self.pos) == game.lodmap.TREASURE:
                 self.pickup()
             elif self.is_tile_in_fov(game.lodmap.TREASURE):
-                print "nearest gold", self.nearest_tile_in_fov(game.lodmap.TREASURE)
+                nearest = self.nearest_tile_in_fov(game.lodmap.TREASURE)
+                print "nearest gold", nearest
+                print "pathfind:"
+                self.pathfind(nearest)
                 time.sleep(2)
             while self.is_tile_at_pos_in_fov(self.next_pos()) == game.lodmap.WALL:
                 self.turn_right()
@@ -115,3 +121,63 @@ class AIBot(object):
                 minimum = diff
                 i += 1
         return tiles[i]
+
+    def adjacent_cells(self, coord):
+        return [(coord[1]+1,coord[0]), (coord[1]-1,coord[0]), (coord[1],coord[0]+1), (coord[1],coord[0]-1)]
+
+    def pathfind(self, coord):
+        pq = []                         # the priority queue list
+        counter = itertools.count(1)    # unique sequence count
+        task_finder = {}                # mapping of tasks to entries
+        INVALID = 0                     # mark an entry as deleted
+
+        def add_task(priority, task, count=None):
+            if count is None:
+                count = next(counter)
+            entry = [priority, count, task]
+            task_finder[task] = entry
+            heappush(pq, entry)
+
+        def get_top_priority():
+            while True:
+                priority, count, task = heappop(pq)
+                del task_finder[task]
+                if count is not INVALID:
+                    return task
+
+        def delete_task(task):
+            entry = task_finder[task]
+            entry[1] = INVALID
+
+        def reprioritize(priority, task):
+            entry = task_finder[task]
+            add_task(priority, task, entry[1])
+            entry[1] = INVALID
+
+        l = self.game.lodmap
+
+        pri = 0
+        add_task(pri, (coord))
+        print "pq", pq
+
+        cell = coord
+        pri += 1
+
+        adj_cells = self.adjacent_cells(cell)
+        print "adj_cells", adj_cells
+        for c in adj_cells:
+            try:
+                if self.fov[c[0]][c[1]] in range(-8, 2):
+                    add_task(pri, (c))
+            except IndexError:
+                continue
+
+        print "pq", pq
+        for task in pq:
+            c = task[2]
+            if self.fov[c[0]][c[1]] in (l.WALL, l.OUTSIDE, l.UNKNOWN):
+                print c, "is impassable", l.int_to_char[self.fov[c[0]][c[1]]]
+                delete_task(c)
+
+        print "pq", pq
+                
