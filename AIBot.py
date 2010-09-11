@@ -123,67 +123,77 @@ class AIBot(object):
         return tiles[i]
 
     def adjacent_cells(self, coord):
+        # !! WARNING !! can give you coords outside of lodmap, so test adjacent
+        # cells after using this function to obtain them, for example
+        # try:
+        #   test = self.fov[coord[0]][coord[1]]
+        # except IndexError:
+        # print "Out of FOV"
         return [(coord[1]+1,coord[0]), (coord[1]-1,coord[0]), (coord[1],coord[0]+1), (coord[1],coord[0]-1)]
 
     def pathfind(self, coord):
-        pq = []                         # the priority queue list
-        counter = itertools.count(1)    # unique sequence count
-        task_finder = {}                # mapping of tasks to entries
-        INVALID = 0                     # mark an entry as deleted
+        l = self.game.lodmap              # convenient abbreviation
+        queue = []                        # the priority queue list
+        add_counter = itertools.count(1)  # unique sequence count
+        coord_finder = {}                 # mapping of coords to entries
+        INVALID = 0                       # mark an entry as deleted
+        pf_iter = 0                       # nonunique sequence count
+                                          #   determines which iteration 
+                                          #   of the pathfinding alg the coord was added
 
-        def add_task(priority, task, count=None):
-            if count is None:
-                count = next(counter)
-            entry = [priority, count, task]
-            task_finder[task] = entry
-            heappush(pq, entry)
+        def add_coord(pf_iter, coord, add_count=None):
+            if add_count is None:
+                add_count = next(add_counter)
+            entry = [pf_iter, add_count, coord]
+            coord_finder[coord] = entry
+            heappush(queue, entry)
 
-        def get_top_priority():
+        def get_lowest_pf_iter():
             while True:
-                priority, count, task = heappop(pq)
-                del task_finder[task]
-                if count is not INVALID:
-                    return task
+                pf_iter, add_count, coord = heappop(queue)
+                del coord_finder[coord]
+                if add_count is not INVALID:
+                    return coord
 
-        def delete_task(task, pri_queue=pq):
-            entry = task_finder[task]
+        def delete_coord(coord, q=queue):
+            entry = coord_finder[coord]
             entry[1] = INVALID # marks entry for deletion by setting count to INVALID
-            pri_queue[:] = [t for t in pri_queue if t[1] != INVALID] # really deletes the task from pri_queue
+            q[:] = [t for t in q if t[1] != INVALID] # really deletes the coord from q
 
-        def reprioritize(priority, task):
-            entry = task_finder[task]
-            add_task(priority, task, entry[1])
+        def reprioritize(pf_iter, coord):
+            entry = coord_finder[coord]
+            add_coord(pf_iter, coord, entry[1])
             entry[1] = INVALID
 
-        l = self.game.lodmap
-
-        pri = 0
-        add_task(pri, (coord))
-        print "pq", pq
+        add_coord(pf_iter, (coord))
+        print "queue", queue
 
         cell = coord
-        pri += 1
 
+        # loop will start here, for cell in queue
+        pf_iter += 1 # counter variable of the current element's counter variable + 1
+
+        # step 1: Create a list of the four adjacent cells
         adj_cells = self.adjacent_cells(cell)
         print "adj_cells", adj_cells
         for c in adj_cells:
             try:
-                if self.fov[c[0]][c[1]] in range(-8, 2):
-                    add_task(pri, (c))
-            except IndexError:
+                test = self.fov[c[0]][c[1]] # if this works cell is inside FOV
+                add_coord(pf_iter, (c))
+            except IndexError: # do not add cells outside of FOV
                 continue
 
-        #step 2.1: If the cell is impassable, remove it from the list
-        print "pq", pq
-        for task in pq:
-            c = task[2]
+        #step 2.1: If the cell is impassable, remove it from the queue 
+        print "queue", queue
+        for coord in queue:
+            c = coord[2]
             if self.fov[c[0]][c[1]] in (l.WALL, l.OUTSIDE, l.UNKNOWN):
                 print c, "is impassable", l.int_to_char[self.fov[c[0]][c[1]]]
-                delete_task(c)
+                delete_coord(c)
 
-        #step 2.2 If there is an element in the main list with the same coordinate and an equal or higher priority (lower number), remove it from the list
-        print "pq", pq
-        for task in pq:
-            print "task", task
-            c = task[2]
+        #step 2.2 If there is an element in the main queue with the same coordinate but an equal or higher pf_iter, remove it from the list
+        print "queue", queue
+        for coord in queue:
+            print "coord", coord
+            c = coord[2]
             print "c", c
