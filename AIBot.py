@@ -1,11 +1,7 @@
 import time
-from heapq import heappush, heappop
-import itertools
 from LODGame import LODGame
 from LODMap import LODMap
-
 class AIBot(object):
-
     def __init__(self, game, delay=1):
         self.game = game
         self.facing = "N"
@@ -13,10 +9,11 @@ class AIBot(object):
         self.x = 2
         self.pos = (self.y, self.x)
         self.distance = 2 + game.lantern
+        l = self.game.lodmap
         while True:
             time.sleep(delay)
             self.look()
-            if self.is_tile_at_pos_in_fov(self.pos) == game.lodmap.TREASURE:
+            if self.tile_in_fov(self.pos) == l.TREASURE:
                 #self.pickup()
                 pass
             elif self.is_tile_in_fov(game.lodmap.TREASURE):
@@ -25,14 +22,14 @@ class AIBot(object):
                 sp = self.shortest_path(nearest)
                 print "shortest_path:", sp
                 time.sleep(2)
-            while self.is_tile_at_pos_in_fov(self.next_pos()) == game.lodmap.WALL:
+            while self.tile_in_fov(self.next_pos()) == game.lodmap.WALL:
                 self.turn_right()
             self.walk()
 
     def look(self):
         g = self.game
-        m = self.game.lodmap
-        self.fov = m.parse_map(g.cli_look(),3,3)
+        l = self.game.lodmap
+        self.fov = l.parse_map(g.cli_look(),3,3)
 
     def pickup(self):
         self.game.cli_pickup()
@@ -89,7 +86,7 @@ class AIBot(object):
             x -= 1
         return (y,x)
 
-    def is_tile_at_pos_in_fov(self, pos):
+    def tile_in_fov(self, pos):
         return self.fov[pos[0]][pos[1]]
 
     def is_tile_in_fov(self, tile):
