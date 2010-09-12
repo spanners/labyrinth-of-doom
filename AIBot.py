@@ -22,7 +22,8 @@ class AIBot(object):
             elif self.is_tile_in_fov(game.lodmap.TREASURE):
                 nearest = self.nearest_tile_in_fov(game.lodmap.TREASURE)
                 print "nearest gold", nearest
-                print "shortest_path:", self.shortest_path(nearest)
+                sp = self.shortest_path(nearest)
+                print "shortest_path:", sp
                 time.sleep(2)
             while self.is_tile_at_pos_in_fov(self.next_pos()) == game.lodmap.WALL:
                 self.turn_right()
@@ -165,3 +166,6 @@ class AIBot(object):
                 if f[c[0]][c[1]] in (l.WALL, l.OUTSIDE, l.UNKNOWN):
                     del queue[c]
                 i += 1
+
+    def walk_path(self, path):
+        pass
