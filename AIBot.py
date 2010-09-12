@@ -123,49 +123,44 @@ class AIBot(object):
                 i += 1
         return tiles[i]
 
-    def adjacent_cells(self, coord):
-        # !! WARNING !! can give you coords outside of lodmap, so test adjacent
-        # cells after using this function to obtain them, for example
-        # try:
-        #   test = self.fov[coord[0]][coord[1]]
-        # except IndexError:
-        # print "Out of FOV"
-        return [(coord[0]+1,coord[1]), (coord[0]-1,coord[1]), (coord[0],coord[1]+1), (coord[0],coord[1]-1)]
-
-
-    def shortest_path(self, coord):
-        f = self.fov
+    def shortest_path(self, target):
         l = self.game.lodmap
-        count = 0
-        queue = dict([(coord, count)])
-        while True:
-            if queue.has_key((2,2)) or count >= len(queue):
-                if queue.has_key((2,2)):
-                    del queue[(2,2)]
-                return queue
-
-            cell = queue.keys()[count]
-            count += 1 
-            # step 1: Create a list of the four adjacent cells
-            adj_cells = self.adjacent_cells(cell)
-            for c in adj_cells:
-                try:
-                    test = f[c[0]][c[1]] # if this works cell is inside FOV
-                    if c[0] >= 0 and c[1] >= 0: # make sure coords are positive
-                        if not queue.has_key(c):
-                            queue[c] = count
-                except IndexError: # do not add cells outside of FOV
-                    continue
-         
-            #step 2.1: If the cell is impassable, remove it from the queue 
+        # our (node,weight) queue
+        # initialised with the target, and a weight of 0
+        queue = [(target,0)]
+        # start with first node in the queue
+        node = queue[0][0]
+        # the weight of the nodes
+        weight = 1
+        def adj_nodes(node):
+            return [(node[0]+1,node[1]), (node[0]-1,node[1]), (node[0],node[1]+1), (node[0],node[1]-1)]
+        def elim_nodes(nodes):
+            # eliminate all nodes that do not meet criteria:
             i = 0
-            while True:
-                if i >= len(queue):
-                    break
-                c = queue.keys()[i]
-                if f[c[0]][c[1]] in (l.WALL, l.OUTSIDE, l.UNKNOWN):
-                    del queue[c]
+            while i < len(nodes):
+                curr = nodes[i]
+                y, x = curr[0], curr[1]
+                # 1. outside fov
+                if not (y in range(5) and x in range(5)): 
+                    del nodes[i]
+                    continue
+                # 2. impassable
+                elif self.fov[y][x] in (l.WALL,l.UNKNOWN,l.OUTSIDE):
+                    del nodes[i]
+                    continue
+                # 3. node already in queue
+                elif curr in [n for (n,w) in queue if n == curr]:
+                    del nodes[i]
+                    continue
                 i += 1
-
-    def walk_path(self, path):
-        pass
+            return nodes
+        # while we have not pathfound ourselves
+        while len([n for (n,w) in queue if n == (2,2)]) < 1:
+            # make a list of the adjacent nodes, eliminating invalids
+            nodes = elim_nodes(adj_nodes(node))
+            # add valid nodes to the queue
+            queue[:] = queue + [(n,weight) for n in nodes]
+            weight += 1
+            weight = weight % len(queue)
+            node = queue[weight][0]
+        return queue
