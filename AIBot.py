@@ -184,6 +184,8 @@ class AIBot(object):
     len_before = len(queue)
     len_after = 0
     weight = 1 # the weight of the nodes
+    """ Maybe look into using visited queue entries, instead of nodes, to
+    justify a broken path"""
     visited_nodes = list()
     while start not in [n for (n, w) in queue]:
       if len_before == len_after and node in visited_nodes:
