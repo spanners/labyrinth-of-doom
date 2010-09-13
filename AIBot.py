@@ -18,8 +18,11 @@ class AIBot(object):
       elif self.is_tile_in_fov(l.TREASURE):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
         print "nearest gold", nearest
-        sp = self.shortest_path((2, 2), nearest)
-        print "shortest_path:", sp
+        try:
+          sp = self.shortest_path((2, 2), nearest)
+          print "shortest_path:", sp
+        except Exception as e:
+          print "path broken around", e
         time.sleep(2)
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
@@ -178,10 +181,18 @@ class AIBot(object):
         return nodes
 
     node = queue[0][0] # current node we're exploring
+    len_before = len(queue)
+    len_after = 0
     weight = 1 # the weight of the nodes
+    visited_nodes = list()
     while start not in [n for (n, w) in queue]:
+      if len_before == len_after and node in visited_nodes:
+        raise Exception(queue[-1][0])
       nodes = elim_nodes(adj_nodes(node))
+      visited_nodes.append(node)
+      len_before = len(queue)
       queue[:] = queue + [(n, weight) for n in nodes]
+      len_after = len(queue)
       weight = (weight + 1) % len(queue)
       node = queue[weight][0]
     return queue
