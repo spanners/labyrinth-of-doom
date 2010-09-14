@@ -1,6 +1,11 @@
 import time
 from LODGame import LODGame
 from LODMap import LODMap
+class BrokenPathException(Exception):
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return repr(self.value)
 class AIBot(object):
   def __init__(self, game, delay=1):
     self.game = game
@@ -19,10 +24,10 @@ class AIBot(object):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
         print "nearest gold", nearest
         try:
-          sp = self.shortest_path((2, 2), nearest)
+          sp = self.shortest_path(nearest, (2, 2))
           print "shortest_path:", sp
-        except Exception as e:
-          print "path broken around", e
+        except BrokenPathException as ex:
+          print "path broken around", ex
         time.sleep(2)
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
@@ -123,21 +128,23 @@ class AIBot(object):
         i += 1
     return tiles[i]
 
-  def shortest_path(self, start, end):
-    """Finds the shortest path from start to end
+  def shortest_path(self, end, start):
+    """Finds the shortest path from end to start.
 
     Args:
-      start: (y, x) coordinate of the start
-      end: (y, x) coordinate of the end
+      start: (y, x) coordinate of the start node.
+      end: (y, x) coordinate of the end node.
 
     Returns:
       queue: A list of the form [((y, x), weight), ...] with the weights of
-      each node in the path from start to end.
-    """
+      each node in the path from end to start.
 
+    Raises:
+      BrokenPathException: If there is not an unbroken path from start to end.
+    """
     l = self.game.lodmap
-    # our (node,weight) queue
-    queue = [(end, 0)]
+
+    queue = [(end, 0)] # our (node,weight) queue
 
     def adj_nodes(node):
       """Find the coordinates of all 4 adjacent nodes.
@@ -180,21 +187,20 @@ class AIBot(object):
           i += 1
         return nodes
 
-    node = queue[0][0] # current node we're exploring
-    len_before = len(queue)
-    len_after = 0
-    weight = 1 # the weight of the nodes
-    """ Maybe look into using visited queue entries, instead of nodes, to
-    justify a broken path"""
+    curr_node = queue[0][0]
+    weight = 1
+    """Maybe look into using visited queue entries, instead of nodes, to
+    justify a broken path.
+    """
     visited_nodes = list()
     while start not in [n for (n, w) in queue]:
-      if len_before == len_after and node in visited_nodes:
-        raise Exception(queue[-1][0])
-      nodes = elim_nodes(adj_nodes(node))
-      visited_nodes.append(node)
-      len_before = len(queue)
-      queue[:] = queue + [(n, weight) for n in nodes]
-      len_after = len(queue)
-      weight = (weight + 1) % len(queue)
-      node = queue[weight][0]
+      nodes = elim_nodes(adj_nodes(curr_node))
+      visited_nodes.append(curr_node)
+      prev_len = len(queue)
+      queue.extend((n, weight) for n in nodes)
+      curr_len = len(queue)
+      weight = (weight + 1) % curr_len
+      curr_node, prev_node = queue[weight][0], curr_node
+      if curr_len == prev_len and curr_node in visited_nodes:
+        raise BrokenPathException(prev_node)
     return queue
