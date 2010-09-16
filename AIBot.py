@@ -24,10 +24,10 @@ class AIBot(object):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
         print "nearest gold", nearest
         try:
-          sp = self.shortest_path(nearest, (2, 2))
-          print "shortest_path:", sp
+          astar = self.a_star((2,2), nearest)
+          print "astar", astar
         except BrokenPathException as ex:
-          print "path broken around", ex
+          print "broken path", ex
         time.sleep(2)
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
@@ -128,79 +128,104 @@ class AIBot(object):
         i += 1
     return tiles[i]
 
-  def shortest_path(self, end, start):
-    """Finds the shortest path from end to start.
+  def a_star(self, start, goal):
+    """Finds shortest path between start and goal.
 
-    Args:
-      start: (y, x) coordinate of the start node.
-      end: (y, x) coordinate of the end node.
-
-    Returns:
-      queue: A list of the form [((y, x), weight), ...] with the weights of
-      each node in the path from end to start.
-
-    Raises:
-      BrokenPathException: If there is not an unbroken path from start to end.
+    Thankyou Wikipedia!
     """
     l = self.game.lodmap
 
-    queue = [(end, 0)] # our (node,weight) queue
-
-    def adj_nodes(node):
-      """Find the coordinates of all 4 adjacent nodes.
-      
-      Args:
-        node: The (y,x) node
-
-      Returns:
-        A list of nodes N,E,S and W of arg node.
-      """
-      return [(node[0] + 1, node[1]), (node[0] - 1, node[1]),
-          (node[0], node[1] + 1), (node[0], node[1] - 1)]
-
-    def elim_nodes(nodes):
-        """Eliminate all nodes that do not meet criteria.
-
-        Args:
-          nodes: A list of (y, x) coordinates that may contain impassable
-            objects, outside FOV or already in queue.
-
-        Returns:
-          nodes: A list of valid (y, x) coordinates.
-        """
+    def group(seq, size, container):
+      seq_length = len(seq)
+      if seq_length % size == 0:
+        result = list()
+        result.append(list())
         i = 0
-        while i < len(nodes):
-          curr = nodes[i]
-          y, x = curr[0], curr[1]
-          # 1. outside fov
-          if not (y in range(5) and x in range(5)): 
-            del nodes[i]
-            continue
-          # 2. impassable
-          elif self.fov[y][x] in (l.WALL, l.UNKNOWN, l.OUTSIDE):
-            del nodes[i]
-            continue
-          # 3. node already in queue
-          elif curr in [n for (n, w) in queue if n == curr]:
-            del nodes[i]
-            continue
-          i += 1
-        return nodes
+        size_counter = 0
+        while True:
+          if size_counter == size:
+            i += 1
+            if i < seq_length:
+              result.append(list())
+              size_counter = 0
+            else:
+              break
+          else:
+            result[i].append(seq[i])
+            size_counter += 1
+        contained_result = list()
+        for g in result:
+          contained_result.append(container(g))
+        return container(contained_result)
+      else:
+        raise Exception("Remainder after grouping")
 
-    curr_node = queue[0][0]
-    weight = 1
-    """Maybe look into using visited queue entries, instead of nodes, to
-    justify a broken path.
-    """
-    visited_nodes = list()
-    while start not in [n for (n, w) in queue]:
-      nodes = elim_nodes(adj_nodes(curr_node))
-      visited_nodes.append(curr_node)
-      prev_len = len(queue)
-      queue.extend((n, weight) for n in nodes)
-      curr_len = len(queue)
-      weight = (weight + 1) % curr_len
-      curr_node, prev_node = queue[weight][0], curr_node
-      if curr_len == prev_len and curr_node in visited_nodes:
-        raise BrokenPathException(prev_node)
-    return queue
+    def heuristic_estimate_of_distance(start, goal):
+      return (abs(start[0] - goal[0]) + abs(start[1] - goal[1]))
+
+    def node_with_lowest_f_score(f_score, openset):
+      lowest_scoring_node = openset[0]
+      i = 0
+      for node in openset:
+        if f_score[node] < f_score[lowest_scoring_node]:
+          lowest_scoring_node = node
+        i += 0
+      return (lowest_scoring_node, i)
+
+    def neighbour_nodes(node):
+      nodes = [(node[0] + 1, node[1]), (node[0] - 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+      i = 0
+      while i < len(nodes):
+        curr = nodes[i]
+        y, x = curr[0], curr[1]
+        # 1. outside fov
+        if not (y in range(5) and x in range(5)): 
+          del nodes[i]
+          continue
+        # 2. impassable
+        elif self.fov[y][x] in (l.WALL, l.UNKNOWN, l.OUTSIDE):
+          del nodes[i]
+          continue
+        i += 1
+      return nodes
+
+    def reconstruct_path(came_from, current_node):
+      if current_node in came_from:
+        p = reconstruct_path(came_from, came_from[current_node])
+        return (p + current_node)
+      else:
+        return current_node
+
+    closedset = list() # The set of nodes already evaluated.
+    openset = [start] # The set of tentative nodes to be evaluated.
+    came_from = dict() # The map of navigated nodes.
+    g_score = dict()
+    h_score = dict()
+    f_score = dict()
+    g_score[start] = 0 # Distance from start along optimal path.
+    h_score[start] = heuristic_estimate_of_distance(start, goal)
+    f_score[start] = h_score[start] # Estimated total distance from start to goal through y.
+    while len(openset) != 0:
+      x, x_index = node_with_lowest_f_score(f_score, openset)
+      if x == goal:
+        return group(reconstruct_path(came_from, came_from[goal]),2,tuple)
+      del openset[x_index]
+      closedset.append(x)
+      for y in neighbour_nodes(x):
+        if y in closedset:
+          continue
+        tentative_g_score = g_score[x] + heuristic_estimate_of_distance(x, y)
+
+        if not y in openset:
+          openset.append(y)
+          tentative_is_better = True
+        elif tentative_g_score < g_score[y]:
+          tentative_is_better = True
+        else:
+          tentative_is_better = False
+        if tentative_is_better:
+          came_from[y] = x
+          g_score[y] = tentative_g_score
+          h_score[y] = heuristic_estimate_of_distance(y, goal)
+          f_score[y] = g_score[y] + h_score[y]
+    raise BrokenPathException("failure")
