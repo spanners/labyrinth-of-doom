@@ -1,11 +1,21 @@
 import time
+import itertools
 from LODGame import LODGame
 from LODMap import LODMap
+
+def grouper(n, iterable, fillvalue=None):
+  """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+  Copied from http://docs.python.org/library/itertools.html#recipes
+  """
+  args = [iter(iterable)] * n
+  return itertools.izip_longest(fillvalue=fillvalue, *args)
+
 class BrokenPathException(Exception):
   def __init__(self, value):
     self.value = value
   def __str__(self):
     return repr(self.value)
+
 class AIBot(object):
   def __init__(self, game, delay=1):
     self.game = game
@@ -131,34 +141,9 @@ class AIBot(object):
   def a_star(self, start, goal):
     """Finds shortest path between start and goal.
 
-    Thankyou Wikipedia!
+    Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
     """
     l = self.game.lodmap
-
-    def group(seq, size, container):
-      seq_length = len(seq)
-      if seq_length % size == 0:
-        result = list()
-        result.append(list())
-        i = 0
-        size_counter = 0
-        while True:
-          if size_counter == size:
-            i += 1
-            if i < seq_length:
-              result.append(list())
-              size_counter = 0
-            else:
-              break
-          else:
-            result[i].append(seq[i])
-            size_counter += 1
-        contained_result = list()
-        for g in result:
-          contained_result.append(container(g))
-        return container(contained_result)
-      else:
-        raise Exception("Remainder after grouping")
 
     def heuristic_estimate_of_distance(start, goal):
       return (abs(start[0] - goal[0]) + abs(start[1] - goal[1]))
@@ -175,6 +160,7 @@ class AIBot(object):
     def neighbour_nodes(node):
       nodes = [(node[0] + 1, node[1]), (node[0] - 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
       i = 0
+      # remove invalid nodes
       while i < len(nodes):
         curr = nodes[i]
         y, x = curr[0], curr[1]
@@ -208,7 +194,8 @@ class AIBot(object):
     while len(openset) != 0:
       x, x_index = node_with_lowest_f_score(f_score, openset)
       if x == goal:
-        return group(reconstruct_path(came_from, came_from[goal]),2,tuple)
+        return tuple(pair for pair in grouper(2, reconstruct_path(came_from,
+          came_from[goal])))
       del openset[x_index]
       closedset.append(x)
       for y in neighbour_nodes(x):
