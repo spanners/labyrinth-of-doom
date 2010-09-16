@@ -158,7 +158,10 @@ class AIBot(object):
       return (lowest_scoring_node, i)
 
     def neighbour_nodes(node):
-      nodes = [(node[0] + 1, node[1]), (node[0] - 1, node[1]), (node[0], node[1] + 1), (node[0], node[1] - 1)]
+      nodes = [(node[0] + 1, node[1]),  # N
+          (node[0], node[1] + 1), # E
+          (node[0] - 1, node[1]), # S
+          (node[0], node[1] - 1)] # W
       i = 0
       # remove invalid nodes
       while i < len(nodes):
@@ -212,4 +215,4 @@ class AIBot(object):
           g_score[y] = tentative_g_score
           h_score[y] = heuristic_estimate_of_distance(y, goal)
           f_score[y] = g_score[y] + h_score[y]
-    raise BrokenPathException("failure")
+    raise BrokenPathException(closedset)
