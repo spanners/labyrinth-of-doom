@@ -114,7 +114,7 @@ class AIBot(object):
     return False
 
   def tile_positions_in_fov(self, tile):
-    tiles = list()
+    tiles = []
     j = 0
     i = 0
     for row in self.fov:
@@ -182,15 +182,12 @@ class AIBot(object):
       else:
         return current_node
 
-    closedset = list() # The set of nodes already evaluated.
+    closedset = [] # The set of nodes already evaluated.
     openset = [start] # The set of tentative nodes to be evaluated.
-    came_from = dict() # The map of navigated nodes.
-    g_score = dict()
-    h_score = dict()
-    f_score = dict()
-    g_score[start] = 0 # Distance from start along optimal path.
-    h_score[start] = heuristic_estimate_of_distance(start, goal)
-    f_score[start] = h_score[start] # Estimated total distance from start to goal through y.
+    came_from = {} # The map of navigated nodes.
+    g_score = {start: 0} # Distance from start along optimal path.
+    h_score = {start: heuristic_estimate_of_distance(start, goal)}
+    f_score = {start: h_score[start]} # Estimated total distance from start to goal through y.
     while len(openset) != 0:
       x, x_index = node_with_lowest_f_score(f_score, openset)
       if x == goal:
