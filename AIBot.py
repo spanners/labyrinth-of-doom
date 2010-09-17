@@ -24,6 +24,7 @@ class AIBot(object):
     self.x = 2
     self.pos = (self.y, self.x)
     self.distance = 2 + game.lantern
+    self.span = (self.distance * 2) + 1
     l = self.game.lodmap
     while True:
       time.sleep(delay)
@@ -34,7 +35,7 @@ class AIBot(object):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
         print "nearest gold", nearest
         try:
-          astar = self.a_star((2,2), nearest)
+          astar = self.a_star((2, 2), nearest)
           print "astar", astar
         except BrokenPathException as ex:
           print "broken path", ex
@@ -46,11 +47,12 @@ class AIBot(object):
   def look(self):
     g = self.game
     l = self.game.lodmap
-    self.fov = l.parse_map(g.cli_look(), 3, 3)
+    self.fov = l.parse_map(g.cli_look())
 
   def pickup(self):
     self.game.cli_pickup()
     self.distance = 2 + self.game.lantern
+    self.span = (self.distance * 2) + 1
 
   def move(self, direction):
     self.facing = direction
@@ -128,7 +130,7 @@ class AIBot(object):
 
   def nearest_tile_in_fov(self, tile):
     tiles = self.tile_positions_in_fov(tile)
-    diffs = [(abs(self.distance - tile[0]), 
+    diffs = [(abs(self.distance - tile[0]),
       abs(self.distance - tile[1])) for tile in tiles]
     i = 0
     minimum = diffs[0]
@@ -139,14 +141,10 @@ class AIBot(object):
     return tiles[i]
 
   def a_star(self, start, goal):
-    """Finds shortest path between start and goal.
-
-    Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
-    """
-    l = self.game.lodmap
 
     def heuristic_estimate_of_distance(start, goal):
-      return (abs(start[0] - goal[0]) + abs(start[1] - goal[1]))
+      #return abs(start[0] - goal[0]) + abs(start[1] - goal[1])
+      return 0
 
     def node_with_lowest_f_score(f_score, openset):
       lowest_scoring_node = openset[0]
@@ -159,20 +157,20 @@ class AIBot(object):
 
     def neighbour_nodes(node):
       nodes = [(node[0] + 1, node[1]),  # N
-          (node[0], node[1] + 1), # E
-          (node[0] - 1, node[1]), # S
-          (node[0], node[1] - 1)] # W
+          (node[0], node[1] + 1),       # E
+          (node[0] - 1, node[1]),       # S
+          (node[0], node[1] - 1)]       # W
       i = 0
-      # remove invalid nodes
+      # Remove invalid nodes:
       while i < len(nodes):
         curr = nodes[i]
         y, x = curr[0], curr[1]
-        # 1. outside fov
-        if not (y in range(5) and x in range(5)): 
+        # 1. Outside FOV
+        if not (y in range(self.span) and x in range(self.span)):
           del nodes[i]
           continue
-        # 2. impassable
-        elif self.fov[y][x] in (l.WALL, l.UNKNOWN, l.OUTSIDE):
+        # 2. Impassable
+        elif self.tile_in_fov(curr) in (l.WALL, l.UNKNOWN, l.OUTSIDE):
           del nodes[i]
           continue
         i += 1
@@ -184,6 +182,13 @@ class AIBot(object):
         return (p + current_node)
       else:
         return current_node
+
+
+    """Finds shortest path between start and goal.
+
+    Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
+    """
+    l = self.game.lodmap
 
     closedset = [] # The set of nodes already evaluated.
     openset = [start] # The set of tentative nodes to be evaluated.
@@ -215,4 +220,4 @@ class AIBot(object):
           g_score[y] = tentative_g_score
           h_score[y] = heuristic_estimate_of_distance(y, goal)
           f_score[y] = g_score[y] + h_score[y]
-    raise BrokenPathException(closedset)
+    raise BrokenPathException(f_score)
