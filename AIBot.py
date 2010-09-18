@@ -145,6 +145,10 @@ class AIBot(object):
     return tiles[i]
 
   def a_star(self, start, goal):
+    """Finds shortest path between start and goal.
+
+    Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
+    """
 
     def heuristic_estimate_of_distance(start, goal):
       #return abs(start[0] - goal[0]) + abs(start[1] - goal[1])
@@ -187,11 +191,6 @@ class AIBot(object):
       else:
         return current_node
 
-
-    """Finds shortest path between start and goal.
-
-    Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
-    """
     l = self.game.lodmap
 
     closedset = [] # The set of nodes already evaluated.
@@ -245,4 +244,3 @@ class AIBot(object):
     for direction in directions:
       self.move(direction)
       self.look()
-
