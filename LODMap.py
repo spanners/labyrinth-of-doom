@@ -41,7 +41,7 @@ class LODMap(object):
     map_string = ''.join(map_file.readlines())
     tmp = map_string.split("\n", 2)
     self.name = tmp[0].split(" ", 2)[1]
-    self.goal = tmp[1].split(" ", 2)[1]
+    self.goal = int(tmp[1].split(" ", 2)[1])
     self.height = len(tmp[2].split("\n")) - 1
     self.width = tmp[2].index("\n")
     self.map = self.parse_map(tmp[2])

@@ -5,14 +5,14 @@ class PlayGame(object):
   def __init__(self, map_filename):
     self.game = LODGame(map_filename)
     ai_bot = AIBot(self.game, 0.5)
-    self.play()
+    #self.play()
 
   def play(self):
     while 1:
       try:
         self.game.cli_look()
         self.player_command(raw_input())
-      except (KeyboardInterrupt,EOFError):
+      except (KeyboardInterrupt, EOFError):
         break
 
   def player_command(self, command):

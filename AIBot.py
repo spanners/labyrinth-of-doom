@@ -30,7 +30,10 @@ class AIBot(object):
     self.distance = 2 + game.lantern
     self.span = (self.distance * 2) + 1
 
-    self.main_loop(delay)
+    try:
+      self.main_loop(delay)
+    except (KeyboardInterrupt, EOFError):
+      pass
 
   def look(self):
     g = self.game
@@ -283,7 +286,7 @@ class AIBot(object):
             self.walk_path((2, 2), path)
             self.pickup()
             break
-          except BrokenPathException as ex:
+          except BrokenPathException:
             # otherwise, try the next nearest target
             continue 
       # turn away from walls

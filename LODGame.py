@@ -32,10 +32,10 @@ class LODGame(object):
 
   def check_win(self):
     lodmap = self.lodmap
-    if self.treasure >= lodmap.goal and lodmap.map[self.y][self.x] is lodmap.EXIT:
-      print "!!!YOU HAVE WON!!!"
-      self.reset()
-      self.new_game()
+    if self.treasure >= lodmap.goal and lodmap.map[self.y][self.x] == lodmap.EXIT:
+        print "!!!YOU HAVE WON!!!"
+        self.reset()
+        self.new_game()
     elif self.is_turn_finished():
       self.start()
 
