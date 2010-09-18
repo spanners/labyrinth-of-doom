@@ -1,7 +1,5 @@
 import time
 import itertools
-from LODGame import LODGame
-from LODMap import LODMap
 
 def grouper(n, iterable, fillvalue=None):
   """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
