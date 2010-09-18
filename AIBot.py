@@ -25,28 +25,27 @@ class AIBot(object):
     self.pos = (self.y, self.x)
     self.distance = 2 + game.lantern
     self.span = (self.distance * 2) + 1
+
+    self.main_loop(delay)
+
+  def main_loop(self, delay):
     l = self.game.lodmap
-
-    self.main()
-
-  def main(self):
+    self.look()
     while True:
       time.sleep(delay)
-      self.look()
       if self.tile_in_fov(self.pos) == l.TREASURE:
         self.pickup()
       elif self.is_tile_in_fov(l.TREASURE):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
         try:
           path = self.a_star((2, 2), nearest)
-          path[:] = path[1:] + [nearest]
           self.walk_path((2, 2), path)
           self.pickup()
         except BrokenPathException as ex:
           pass
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
-     self.walk()
+      self.walk()
 
   def look(self):
     g = self.game
@@ -62,7 +61,7 @@ class AIBot(object):
     self.facing = direction
     self.walk()
 
-  def walk(self):
+  def walk(self, do_look=True):
     facing = self.facing
     if facing == "N":
       self.y -= 1
@@ -73,6 +72,8 @@ class AIBot(object):
     elif facing == "W":
       self.x -= 1
     self.game.cli_move(facing)
+    if do_look:
+      self.look()
 
   def turn_left(self):
     facing = self.facing
@@ -203,7 +204,7 @@ class AIBot(object):
       x, x_index = node_with_lowest_f_score(f_score, openset)
       if x == goal:
         return [pair for pair in grouper(2, reconstruct_path(came_from,
-          came_from[goal]))]
+          came_from[goal]))][1:] + [goal]
       del openset[x_index]
       closedset.append(x)
       for y in neighbour_nodes(x):
@@ -243,4 +244,3 @@ class AIBot(object):
       pos = node
     for direction in directions:
       self.move(direction)
-      self.look()
