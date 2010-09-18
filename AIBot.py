@@ -3,8 +3,13 @@ import time
 import operator
 
 def grouper(n, iterable, fillvalue=None):
-  """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+  "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+  """Groups iterable into n sized yields, filling gaps with fillvalue.
+
   Copied from http://docs.python.org/library/itertools.html#recipes
+
+  Returns:
+    A generator of the groups.
   """
   args = [iter(iterable)] * n
   return itertools.izip_longest(fillvalue=fillvalue, *args)
@@ -115,7 +120,7 @@ class AIBot(object):
   
   def nearest_tiles(self, tile):
     "nearest_tiles(TREASURE) --> [(2, 0), (0, 2), (0, 3)]"
-    """Finds the nearest tiles in the bot's field of vision.
+    """Finds the positions of the nearest tiles in the bot's field of vision.
 
     Args:
       tile: The type of tile you want to find the coordinates of e.g.
