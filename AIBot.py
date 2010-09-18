@@ -26,6 +26,10 @@ class AIBot(object):
     self.distance = 2 + game.lantern
     self.span = (self.distance * 2) + 1
     l = self.game.lodmap
+
+    self.main()
+
+  def main(self):
     while True:
       time.sleep(delay)
       self.look()
@@ -33,16 +37,16 @@ class AIBot(object):
         self.pickup()
       elif self.is_tile_in_fov(l.TREASURE):
         nearest = self.nearest_tile_in_fov(l.TREASURE)
-        print "nearest gold", nearest
         try:
-          astar = self.a_star((2, 2), nearest)
-          print "astar", astar
+          path = self.a_star((2, 2), nearest)
+          path[:] = path[1:] + [nearest]
+          self.walk_path((2, 2), path)
+          self.pickup()
         except BrokenPathException as ex:
-          print "broken path", ex
-        time.sleep(2)
+          pass
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
-      self.walk()
+     self.walk()
 
   def look(self):
     g = self.game
@@ -199,8 +203,8 @@ class AIBot(object):
     while len(openset) != 0:
       x, x_index = node_with_lowest_f_score(f_score, openset)
       if x == goal:
-        return tuple(pair for pair in grouper(2, reconstruct_path(came_from,
-          came_from[goal])))
+        return [pair for pair in grouper(2, reconstruct_path(came_from,
+          came_from[goal]))]
       del openset[x_index]
       closedset.append(x)
       for y in neighbour_nodes(x):
@@ -221,3 +225,24 @@ class AIBot(object):
           h_score[y] = heuristic_estimate_of_distance(y, goal)
           f_score[y] = g_score[y] + h_score[y]
     raise BrokenPathException(f_score)
+
+  def walk_path(self, pos, path):
+    def direction_of_adjacent_node(node, adj_node):
+      if adj_node[0] == node[0]:
+        if adj_node[1] < node[1]:
+          return "W"
+        else:
+          return "E"
+      else:
+        if adj_node[0] < node[0]:
+          return "N"
+        else:
+          return "S"
+    directions = []
+    for node in path:
+      directions.append(direction_of_adjacent_node(pos, node))
+      pos = node
+    for direction in directions:
+      self.move(direction)
+      self.look()
+
