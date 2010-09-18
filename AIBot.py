@@ -1,5 +1,6 @@
-import time
 import itertools
+import time
+import operator
 
 def grouper(n, iterable, fillvalue=None):
   """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
@@ -25,25 +26,6 @@ class AIBot(object):
     self.span = (self.distance * 2) + 1
 
     self.main_loop(delay)
-
-  def main_loop(self, delay):
-    l = self.game.lodmap
-    self.look()
-    while True:
-      time.sleep(delay)
-      if self.tile_in_fov(self.pos) == l.TREASURE:
-        self.pickup()
-      elif self.is_tile_in_fov(l.TREASURE):
-        nearest = self.nearest_tile_in_fov(l.TREASURE)
-        try:
-          path = self.a_star((2, 2), nearest)
-          self.walk_path((2, 2), path)
-          self.pickup()
-        except BrokenPathException as ex:
-          pass
-      while self.tile_in_fov(self.next_pos()) == l.WALL:
-        self.turn_right()
-      self.walk()
 
   def look(self):
     g = self.game
@@ -130,27 +112,49 @@ class AIBot(object):
       i = 0
       j += 1
     return tiles
+  
+  def nearest_tiles(self, tile):
+    "nearest_tiles(TREASURE) --> [(2, 0), (0, 2), (0, 3)]"
+    """Finds the nearest tiles in the bot's field of vision.
 
-  def nearest_tile_in_fov(self, tile):
-    tiles = self.tile_positions_in_fov(tile)
-    diffs = [(abs(self.distance - tile[0]),
-      abs(self.distance - tile[1])) for tile in tiles]
-    i = 0
-    minimum = diffs[0]
-    for diff in diffs[1:]:
-      if sum(diff) < sum(minimum):
-        minimum = diff
-        i += 1
-    return tiles[i]
+    Args:
+      tile: The type of tile you want to find the coordinates of e.g.
+      self.game.lodmap.TREASURE.
+
+    Returns:
+      A list of the tiles positions sorted in ascending
+        order by manhattan distance from the bot e.g. [(2, 0), (0, 2), (0, 3)].
+    """
+
+    def sort_tiles_by_dist(tiles_dists):
+      "sort_tiles_by_dist({(0, 2):2, (2, 0):1, (0, 3):3}) --> [(2, 0), (0, 2), (0, 3)]"
+      return [k for k,v in sorted(tiles_dists.iteritems(), key=operator.itemgetter(1))]
+
+    tiles_pos = self.tile_positions_in_fov(tile)
+    manhattan_dists = [(abs(self.distance - pos[0]) +
+      abs(self.distance - pos[1])) for pos in tiles_pos]
+    return sort_tiles_by_dist(dict(zip(tiles_pos, manhattan_dists)))
 
   def a_star(self, start, goal):
+    "a_star((2, 2), (4, 1)) --> [(3, 2), (3, 1), (4, 1)]"
     """Finds shortest path between start and goal.
 
     Adapted from http://en.wikipedia.org/wiki/A*_search_algorithm
+
+    Args:
+      start: (y, x) coordinate of the start of the path you want to find.
+        Usually the bot's current position, self.pos.
+      goal: (y, x) coordinate of where you want to get to.
+
+    Returns:
+      Shortest path between start and goal, not including the start, including
+        the goal.
+
+    Raises:
+      BrokenPathException(f_score): If the path can not be found.
     """
 
     def heuristic_estimate_of_distance(start, goal):
-      #return abs(start[0] - goal[0]) + abs(start[1] - goal[1])
       return 0
 
     def node_with_lowest_f_score(f_score, openset):
@@ -163,6 +167,18 @@ class AIBot(object):
       return (lowest_scoring_node, i)
 
     def neighbour_nodes(node):
+      "neighbour_nodes((2, 2)) --> [(1, 2), (2, 3), (3, 2), (2, 1)]"
+      """Finds the valid neighbouring nodes to node.
+
+      Args:
+        node: The (y, x) of the node you want to find the neighbouring nodes
+          of.
+
+      Returns:
+        A list of the valid (inside the field of vision, and passable) nodes
+          that are neighbours of node.
+      """
+
       nodes = [(node[0] + 1, node[1]),  # N
           (node[0], node[1] + 1),       # E
           (node[0] - 1, node[1]),       # S
@@ -242,3 +258,30 @@ class AIBot(object):
       pos = node
     for direction in directions:
       self.move(direction)
+      
+  def main_loop(self, delay):
+    l = self.game.lodmap
+    self.look() # initialise the field of vision self.fov
+    while True:
+      time.sleep(delay)
+      # pickup gold we spawned on top of
+      if self.tile_in_fov(self.pos) == l.TREASURE:
+        self.pickup()
+      # pathfind to gold
+      elif self.is_tile_in_fov(l.TREASURE):
+        nearest_tiles = self.nearest_tiles(l.TREASURE)
+        for target in nearest_tiles:
+          # try to get to the nearest target
+          try:
+            path = self.a_star((2, 2), target)
+            # if we can pathfind to it, pick it up
+            self.walk_path((2, 2), path)
+            self.pickup()
+            break
+          except BrokenPathException as ex:
+            # otherwise, try the next nearest target
+            continue 
+      # turn away from walls
+      while self.tile_in_fov(self.next_pos()) == l.WALL:
+        self.turn_right()
+      self.walk()
