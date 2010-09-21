@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.4
+
 import itertools
 import time
 import operator
@@ -134,7 +135,7 @@ class AIBot(object):
       i = 0
       j += 1
     return tiles
-  
+
   def nearest_tiles(self, tile):
     "nearest_tiles(TREASURE) --> [(2, 0), (0, 2), (0, 3)]"
     """Finds the positions of the nearest tiles in the bot's field of vision.
@@ -280,7 +281,7 @@ class AIBot(object):
       pos = node
     for direction in directions:
       self.move(direction)
-      
+
   def main_loop(self, delay):
     l = self.game.lodmap
     self.look() # initialise the field of vision self.fov
@@ -302,7 +303,7 @@ class AIBot(object):
             break
           except BrokenPathException:
             # otherwise, try the next nearest target
-            continue 
+            continue
       # turn away from walls
       while self.tile_in_fov(self.next_pos()) == l.WALL:
         self.turn_right()
