@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.4
 import random
 import sys
 from LODMap import LODMap

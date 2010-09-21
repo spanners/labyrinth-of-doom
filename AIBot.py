@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.4
 import itertools
 import time
 import operator

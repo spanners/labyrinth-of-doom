@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.4
+
 class LODMap(object):
   def __init__(self, map_filename):
     self.TREASURE = 1

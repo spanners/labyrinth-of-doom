@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.4
+
 from LODGame import LODGame
 from AIBot import AIBot
 import sys
