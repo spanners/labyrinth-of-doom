@@ -2,6 +2,19 @@ import itertools
 import time
 import operator
 
+def izip_longest(*args, **kwds):
+    # izip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-
+    fillvalue = kwds.get('fillvalue')
+    def sentinel(counter = ([fillvalue]*(len(args)-1)).pop):
+        yield counter()         # yields the fillvalue, or raises IndexError
+    fillers = itertools.repeat(fillvalue)
+    iters = [itertools.chain(it, sentinel(), fillers) for it in args]
+    try:
+        for tup in itertools.izip(*iters):
+            yield tup
+    except IndexError:
+        pass
+
 def grouper(n, iterable, fillvalue=None):
   "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
   """Groups iterable into n sized yields, filling gaps with fillvalue.
@@ -12,7 +25,7 @@ def grouper(n, iterable, fillvalue=None):
     A generator of the groups.
   """
   args = [iter(iterable)] * n
-  return itertools.izip_longest(fillvalue=fillvalue, *args)
+  return izip_longest(fillvalue=fillvalue, *args)
 
 class BrokenPathException(Exception):
   def __init__(self, value):
